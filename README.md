@@ -67,8 +67,6 @@ POD app/
 ## 📖 Documentation
 
 - [Version History](./docs/CHANGELOG.md)
-- [Project Structure Details](./STRUCTURE.md)
-- [Contributing Guidelines](./CONTRIBUTING.md)
 
 ## 🧪 Testing
 
