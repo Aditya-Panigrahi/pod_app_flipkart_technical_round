@@ -1,0 +1,22 @@
+{
+  "name": "pod-frontend",
+  "version": "1.0.0",
+  "description": "Progressive Web App for Proof of Delivery",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "npx http-server . -p 8000",
+    "dev": "npx live-server --port=8000",
+    "backend": "cd backend && npm install && npm start",
+    "setup": "cd backend && npm install",
+    "build": "echo 'No build process needed for vanilla JS'",
+    "test": "echo 'Tests not implemented yet'"
+  },
+  "keywords": ["pwa", "logistics", "delivery", "barcode", "camera"],
+  "author": "POD Team",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  }
+}

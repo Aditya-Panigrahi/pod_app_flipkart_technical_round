@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POD - Proof of Delivery</title>
+    <link rel="manifest" href="public/manifest.json">
+    <link rel="stylesheet" href="src/css/styles.css">
+    <meta name="theme-color" content="#2196F3">
+    <link rel="icon" href="src/assets/icons/icon-192.png" type="image/png">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>📦 POD App</h1>
+                <div class="branding">
+                    <span class="powered-by">Powered by <strong>Flipkart</strong></span>
+                    <span class="developed-by">Developed by <strong>Aditya</strong></span>
+                </div>
+            </div>
+            <p>Proof of Delivery Scanner</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Home Screen -->
+            <div id="home-screen" class="screen active">
+                <div class="card">
+                    <h2>Start Delivery Process</h2>
+                    <p>Scan AWB number and capture proof of delivery</p>
+                    <button id="start-scan" class="btn btn-primary">
+                        📱 Start Scanning
+                    </button>
+                </div>
+                
+                <div class="recent-deliveries">
+                    <h3>Recent Deliveries</h3>
+                    <div id="recent-list">
+                        <!-- Recent deliveries populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scanner Screen -->
+            <div id="scanner-screen" class="screen">
+                <div class="scanner-container">
+                    <h2>Scan AWB Number</h2>
+                    <div id="scanner-viewport">
+                        <video id="scanner-video" autoplay muted playsinline></video>
+                        <div id="scanner-overlay">
+                            <div class="scan-frame"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="scanner-controls">
+                        <button id="manual-entry" class="btn btn-secondary">
+                            ⌨️ Manual Entry
+                        </button>
+                        <button id="cancel-scan" class="btn btn-danger">
+                            ❌ Cancel
+                        </button>
+                    </div>
+
+                    <!-- Manual AWB Entry Modal -->
+                    <div id="manual-modal" class="modal">
+                        <div class="modal-content">
+                            <h3>Enter AWB Number</h3>
+                            <input type="text" id="manual-awb" placeholder="Enter AWB number" maxlength="20">
+                            <div class="modal-buttons">
+                                <button id="confirm-manual" class="btn btn-primary">Confirm</button>
+                                <button id="cancel-manual" class="btn btn-secondary">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Camera Screen -->
+            <div id="camera-screen" class="screen">
+                <div class="camera-container">
+                    <h2>Capture Proof of Delivery</h2>
+                    <p id="awb-display">AWB: <span id="current-awb"></span></p>
+                    
+                    <div id="camera-viewport">
+                        <video id="camera-video" autoplay muted playsinline></video>
+                        <canvas id="photo-canvas" style="display: none;"></canvas>
+                    </div>
+
+                    <div class="media-preview" id="media-preview" style="display: none;">
+                        <img id="preview-image" style="display: none;">
+                        <video id="preview-video" style="display: none;" controls></video>
+                    </div>
+
+                    <div class="camera-controls">
+                        <button id="capture-photo" class="btn btn-primary">
+                            📷 Take Photo
+                        </button>
+                        <button id="record-video" class="btn btn-secondary">
+                            🎥 Record Video
+                        </button>
+                        <button id="retake-media" class="btn btn-warning" style="display: none;">
+                            🔄 Retake
+                        </button>
+                        <button id="confirm-media" class="btn btn-success" style="display: none;">
+                            ✅ Confirm
+                        </button>
+                        <button id="back-to-scanner" class="btn btn-danger">
+                            ⬅️ Back
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Screen -->
+            <div id="upload-screen" class="screen">
+                <div class="upload-container">
+                    <h2>Uploading Delivery Proof</h2>
+                    <p id="upload-awb">AWB: <span></span></p>
+                    
+                    <div class="upload-progress">
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <p id="upload-status">Preparing upload...</p>
+                    </div>
+
+                    <div id="upload-success" class="success-message" style="display: none;">
+                        <h3>✅ Upload Successful!</h3>
+                        <p>Delivery proof has been saved to cloud storage.</p>
+                        <button id="new-delivery" class="btn btn-primary">
+                            📦 New Delivery
+                        </button>
+                    </div>
+
+                    <div id="upload-error" class="error-message" style="display: none;">
+                        <h3>❌ Upload Failed</h3>
+                        <p id="error-details"></p>
+                        <button id="retry-upload" class="btn btn-warning">
+                            🔄 Retry Upload
+                        </button>
+                        <button id="save-offline" class="btn btn-secondary">
+                            💾 Save Offline
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>POD App v1.0 | <span id="connection-status">Online</span></p>
+        </footer>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
+    <script src="src/js/app.js"></script>
+</body>
+</html>
