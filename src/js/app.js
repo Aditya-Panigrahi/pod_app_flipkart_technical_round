@@ -15,6 +15,57 @@ class PODApp {
         
         this.init();
     }
+    
+    initializeNewDelivery() {
+        // Reset all media-related state
+        if (this.capturedMedia && this.capturedMedia instanceof Blob) {
+            URL.revokeObjectURL(URL.createObjectURL(this.capturedMedia));
+        }
+        
+        this.capturedMedia = null;
+        this.mediaType = null;
+        this.isRecording = false;
+        this.mediaRecorder = null;
+        this.recordedChunks = [];
+        this.currentAWB = '';
+        
+        // Reset UI elements
+        const previewImage = document.getElementById('preview-image');
+        const previewVideo = document.getElementById('preview-video');
+        const mediaPreview = document.getElementById('media-preview');
+        
+        if (previewImage) {
+            previewImage.src = '';
+            previewImage.style.display = 'none';
+        }
+        
+        if (previewVideo) {
+            previewVideo.src = '';
+            previewVideo.style.display = 'none';
+        }
+        
+        if (mediaPreview) {
+            mediaPreview.style.display = 'none';
+        }
+        
+        // Reset camera controls
+        const captureBtn = document.getElementById('capture-photo');
+        const recordBtn = document.getElementById('record-video');
+        const retakeBtn = document.getElementById('retake-media');
+        const confirmBtn = document.getElementById('confirm-media');
+        
+        if (captureBtn) captureBtn.style.display = 'inline-block';
+        if (recordBtn) recordBtn.style.display = 'inline-block';
+        if (retakeBtn) retakeBtn.style.display = 'none';
+        if (confirmBtn) confirmBtn.style.display = 'none';
+        
+        // Reset upload progress
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('upload-status').textContent = '';
+        document.getElementById('upload-success').style.display = 'none';
+        document.getElementById('upload-error').style.display = 'none';
+        document.querySelector('.upload-progress').style.display = 'block';
+    }
 
     init() {
         this.setupEventListeners();
@@ -41,7 +92,10 @@ class PODApp {
         document.getElementById('back-to-scanner').addEventListener('click', () => this.showScanner());
         
         // Upload screen controls
-        document.getElementById('new-delivery').addEventListener('click', () => this.showHome());
+        document.getElementById('new-delivery').addEventListener('click', () => {
+            this.initializeNewDelivery();
+            this.showHome();
+        });
         document.getElementById('retry-upload').addEventListener('click', () => this.retryUpload());
         document.getElementById('save-offline').addEventListener('click', () => this.saveOffline());
         
@@ -64,6 +118,7 @@ class PODApp {
     }
 
     showHome() {
+        this.initializeNewDelivery();
         this.showScreen('home-screen');
         this.loadRecentDeliveries();
     }
@@ -352,6 +407,17 @@ class PODApp {
             await this.saveMetadataLocally();
             
             this.updateUploadStatus('Upload complete!', 100);
+            
+            // Clear media state before showing success
+            const oldMedia = this.capturedMedia;
+            this.capturedMedia = null;
+            this.mediaType = null;
+            
+            // Clean up object URLs
+            if (oldMedia && oldMedia instanceof Blob) {
+                URL.revokeObjectURL(URL.createObjectURL(oldMedia));
+            }
+            
             this.showUploadSuccess();
             
         } catch (error) {
@@ -401,9 +467,26 @@ class PODApp {
             filename: `${this.currentAWB}_${this.mediaType}_${Date.now()}`,
             mediaType: this.mediaType,
             timestamp: new Date().toISOString(),
-            fileSize: this.capturedMedia.size,
+            fileSize: this.capturedMedia ? this.capturedMedia.size : 0,
             status: 'completed'
         };
+        
+        // Always save media data for preview functionality
+        if (this.capturedMedia) {
+            try {
+                // Convert blob to base64 data URL
+                metadata.mediaData = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(new Error('Failed to read media for local save'));
+                    reader.readAsDataURL(this.capturedMedia);
+                });
+                console.log('Media data saved successfully');
+            } catch (err) {
+                console.error('Failed to include media data in local metadata:', err);
+                metadata.status = 'media_error';
+            }
+        }
         
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -419,6 +502,11 @@ class PODApp {
     showUploadSuccess() {
         document.getElementById('upload-success').style.display = 'block';
         document.querySelector('.upload-progress').style.display = 'none';
+        
+        // Clear captured media and reset state
+        this.capturedMedia = null;
+        this.mediaType = null;
+        this.currentAWB = '';
     }
 
     showUploadError(message) {
@@ -481,11 +569,59 @@ class PODApp {
         }
         
         recentList.innerHTML = deliveries.slice(0, 5).map(delivery => `
-            <div class="recent-item">
+            <div class="recent-item" data-awb="${delivery.awb}">
                 <span class="awb">${delivery.awb}</span>
                 <span class="status ${delivery.status || 'completed'}">${delivery.status || 'completed'}</span>
             </div>
         `).join('');
+
+        // Add click handlers for recent items
+        recentList.querySelectorAll('.recent-item').forEach(item => {
+            item.addEventListener('click', () => this.showDeliveryPreview(item.dataset.awb));
+        });
+    }
+
+    async showDeliveryPreview(awb) {
+        const deliveries = JSON.parse(localStorage.getItem('pod_deliveries') || '[]');
+        const delivery = deliveries.find(d => d.awb === awb);
+        
+        if (!delivery) {
+            alert('Delivery not found');
+            return;
+        }
+
+        const modal = document.getElementById('media-preview-modal');
+        const previewAwb = document.getElementById('preview-awb');
+        const previewImage = document.getElementById('modal-preview-image');
+        const previewVideo = document.getElementById('modal-preview-video');
+        
+        previewAwb.textContent = `AWB: ${delivery.awb}`;
+        
+        // Reset previews
+        previewImage.style.display = 'none';
+        previewVideo.style.display = 'none';
+        
+        if (delivery.mediaData) {
+            if (delivery.mediaType === 'photo') {
+                previewImage.src = delivery.mediaData;
+                previewImage.style.display = 'block';
+            } else if (delivery.mediaType === 'video') {
+                previewVideo.src = delivery.mediaData;
+                previewVideo.style.display = 'block';
+            }
+        } else {
+            previewAwb.textContent += ' (No media available)';
+        }
+        
+        modal.classList.add('active');
+        
+        // Close button handler
+        const closeBtn = document.getElementById('close-preview');
+        const closeHandler = () => {
+            modal.classList.remove('active');
+            closeBtn.removeEventListener('click', closeHandler);
+        };
+        closeBtn.addEventListener('click', closeHandler);
     }
 
     // Utility Functions
@@ -512,11 +648,42 @@ class PODApp {
         document.getElementById('loading').style.display = show ? 'flex' : 'none';
     }
 
+    resetState() {
+        // Clear media and AWB
+        this.capturedMedia = null;
+        this.mediaType = null;
+        this.currentAWB = '';
+        this.recordedChunks = [];
+        
+        // Reset UI elements
+        const preview = document.getElementById('media-preview');
+        const img = document.getElementById('preview-image');
+        const video = document.getElementById('preview-video');
+        
+        if (preview) preview.style.display = 'none';
+        if (img) img.src = '';
+        if (video) video.src = '';
+        
+        // Reset upload progress
+        const progressBar = document.getElementById('progress-fill');
+        if (progressBar) progressBar.style.width = '0%';
+        
+        // Hide success/error messages
+        const successMsg = document.getElementById('upload-success');
+        const errorMsg = document.getElementById('upload-error');
+        if (successMsg) successMsg.style.display = 'none';
+        if (errorMsg) errorMsg.style.display = 'none';
+        
+        // Show progress container
+        const progressContainer = document.querySelector('.upload-progress');
+        if (progressContainer) progressContainer.style.display = 'block';
+    }
+
     // Service Worker Registration for PWA
     async registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             try {
-                await navigator.serviceWorker.register('./public/sw.js');
+                await navigator.serviceWorker.register('/sw.js');
                 console.log('Service Worker registered successfully');
             } catch (error) {
                 console.log('Service Worker registration failed:', error);

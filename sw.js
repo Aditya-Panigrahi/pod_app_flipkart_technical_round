@@ -1,11 +1,11 @@
 // Service Worker for POD PWA - Offline Support and Caching
 const CACHE_NAME = 'pod-app-v1';
 const urlsToCache = [
-    './',
-    './index.html',
-    './src/css/styles.css',
-    './src/js/app.js',
-    './public/manifest.json',
+    '/',
+    '/index.html',
+    '/src/css/styles.css',
+    '/src/js/app.js',
+    '/manifest.json',
     'https://unpkg.com/quagga@0.12.1/dist/quagga.min.js'
 ];
 
@@ -29,7 +29,7 @@ self.addEventListener('fetch', (event) => {
             })
             .catch(() => {
                 if (event.request.destination === 'document') {
-                    return caches.match('./index.html');
+                    return caches.match('/index.html');
                 }
             })
     );

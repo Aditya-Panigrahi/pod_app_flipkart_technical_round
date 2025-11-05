@@ -420,6 +420,22 @@ body {
     background: #F5F5F5;
     border-radius: 8px;
     font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.recent-item:hover {
+    background: #E3F2FD;
+}
+
+.media-preview-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    text-align: center;
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
 }
 
 .recent-item .awb {
